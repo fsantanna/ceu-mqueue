@@ -3,7 +3,6 @@ require 'simul'
 recv = simul.app {
     name  = 'recv',
     source = [[
-native _DBG();
 input int A;
 loop do
     var int v = await A;
@@ -15,7 +14,6 @@ end
 send = simul.app {
     name  = 'send',
     source = [[
-native _DBG();
 output int B;
 var int v = 1;
 loop do

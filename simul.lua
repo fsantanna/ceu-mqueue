@@ -134,7 +134,7 @@ end
 
 function _kill (app)
     os.remove('/dev/mqueue/'..app._queue)
-    --os.remove(app._ceu)
+    os.remove(app._ceu)
     os.execute('killall '..app._exe)
 end
 

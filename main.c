@@ -18,7 +18,7 @@ typedef struct _Link {
     struct _Link* nxt;
 } Link;
 
-Link* LINKS[CEU_OUT_n];
+Link* LINKS[CEU_OUT_n+1];
 
 int ceu_out_event_F (tceu_app* app, int id_out, int len, void* data) {
     int cnt = 0;
@@ -40,7 +40,7 @@ int main (int argc, char *argv[])
 #endif
 
     int i;
-    for (i=0; i<CEU_OUT_n; i++) {
+    for (i=1; i<=CEU_OUT_n; i++) {
         LINKS[i] = NULL;
     }
 
@@ -80,7 +80,7 @@ int main (int argc, char *argv[])
     {
         struct timespec ts_now;
         clock_gettime(CLOCK_REALTIME, &ts_now);
-        s32 dt = (ts_now.tv_sec - ts_old.tv_sec)*1000000 +
+        s32 dt = (ts_now.tv_sec  - ts_old.tv_sec)*1000000 +
                  (ts_now.tv_nsec - ts_old.tv_nsec)/1000;
         ts_old = ts_now;
 
@@ -91,8 +91,9 @@ int main (int argc, char *argv[])
                 ts_now.tv_sec += 100;
 #ifdef CEU_WCLOCKS
             } else {
+                DT -= dt;
                 u64 t = ts_now.tv_sec*1000000LL +  ts_now.tv_nsec%1000LL;
-                t += dt;
+                t += DT;
                 ts_now.tv_sec  = t / 1000000LL;
                 ts_now.tv_nsec = t % 1000000LL;
             }
@@ -105,7 +106,7 @@ int main (int argc, char *argv[])
             ceu_sys_go(&app, CEU_IN__WCLOCK, &dt);
 #endif
 #ifdef CEU_ASYNCS
-            ceu_go_async();
+            ceu_sys_go(&app, CEU_IN__ASYNC, NULL);
 #endif
         }
         else
@@ -124,7 +125,7 @@ int main (int argc, char *argv[])
                     s16 id_in = *((s16*)buf);
                     buf += sizeof(s16);
 
-                    ASR(id_out < CEU_OUT_n);
+                    ASR(id_out <= CEU_OUT_n);
 
                     Link *cur,*old;
                     for (old=NULL,cur=LINKS[id_out]; cur; old=cur,cur=cur->nxt) {
@@ -149,7 +150,7 @@ int main (int argc, char *argv[])
                     s16 id_in = *((s16*)buf);
                     buf += sizeof(s16);
 
-                    ASR(id_out < CEU_OUT_n);
+                    ASR(id_out <= CEU_OUT_n);
                     mqd_t queue = mq_open(name, O_WRONLY|O_NONBLOCK);
                     ASR(queue != -1);
 
