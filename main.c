@@ -94,7 +94,12 @@ int main (int argc, char *argv[])
     app.init(&app);
 
 #ifdef CEU_IN_OS_START
-    ceu_sys_go(&app, CEU_IN_OS_START, NULL);
+    {
+        //ceu_sys_go(&app, CEU_IN_OS_START, NULL);
+        char _buf[MSGSIZE];
+        *((s16*)_buf) = CEU_IN_OS_START;
+        ASR(mq_send(queue_write, _buf, sizeof(s16), 0) == 0);
+    }
 #endif
 
     char _buf[MSGSIZE];
