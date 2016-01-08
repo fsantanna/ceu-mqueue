@@ -111,7 +111,7 @@ end
 
 function link (app1,out, app2,inp)
     DBG('===> Linking '..app1._queue..'/'..out..' -> '..app2._queue..'/'..inp)
-    os.execute('./qu send '..app1._queue..' '..QU.LINK..' '..app1.io[out]
+    os.execute('./qu send '..app1._queue..' '..QU.LINK..' '..assert(app1.io[out],out)
                       ..' '..app2._queue..' '..app2.io[inp])
 end
 

@@ -52,7 +52,8 @@ int ceu_out_event_F (tceu_app* app, int id_out, int len, void* data) {
         if (mq_send(cur->queue, _buf, len+sizeof(s16), 0) == 0)
             cnt++;
     }
-    return cnt || LINKS[id_out]==NULL;
+    //return cnt || LINKS[id_out]==NULL;
+    return (cnt > 0) ? 0 : 1;
 }
 
 int main (int argc, char *argv[])
