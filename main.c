@@ -51,6 +51,7 @@ int ceu_out_event_F (tceu_app* app, int id_out, int len, char* data) {
 
         memcpy(_buf+sizeof(s16), data, len);
 
+#ifdef CEU_VECTOR
         // REF_1
         // vector in the last argument?
         // copy the plain vector and the payload to the end of "_buf", and 
@@ -65,6 +66,7 @@ int ceu_out_event_F (tceu_app* app, int id_out, int len, char* data) {
                 len += v->nxt;
             }
         }
+#endif
 
         if (mq_send(cur->queue, _buf, len+sizeof(s16), 0) == 0)
             cnt++;
@@ -228,6 +230,7 @@ int main (int argc, char *argv[])
                 }
                 default: {
 #ifdef CEU_EXTS
+#ifdef CEU_VECTOR
                     // REF_1
                     u8 vector_offset = *((u8*)buf);
                     if (vector_offset > 0) {
@@ -235,7 +238,7 @@ int main (int argc, char *argv[])
                         *v = (tceu_vector*)(buf + vector_offset + sizeof(tceu_vector*));
                         (*v)->mem = (char*)(buf + vector_offset + sizeof(tceu_vector*) + sizeof(tceu_vector));
                     }
-
+#endif
                     ceu_sys_go(&app, id_in, buf);
 #endif
                     break;
