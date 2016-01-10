@@ -169,6 +169,7 @@ function shell (start)
         elseif cmd == 'unlink' then
             unlink(APPS[p1],p2, APPS[p3],p4)
 
+        elseif cmd == '' then
         else
             print('invalid command: "'..cmd..'" (type "quit" to terminate)')
         end

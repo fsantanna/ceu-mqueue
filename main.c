@@ -62,8 +62,8 @@ int ceu_out_event_F (tceu_app* app, int id_out, int len, char* data) {
                 tceu_vector* v = *((tceu_vector**)(data + vector_offset));
                 memcpy(_buf+sizeof(s16)+len, v, sizeof(tceu_vector));
                 len += sizeof(tceu_vector);
-                memcpy(_buf+sizeof(s16)+len, v->mem, v->nxt);
-                len += v->nxt;
+                memcpy(_buf+sizeof(s16)+len, v->mem, v->nxt+1);
+                len += v->nxt+1;    /* +1: char[] */
             }
         }
 #endif
@@ -99,9 +99,6 @@ int main (int argc, char *argv[])
     int async_cnt = 0;
 #endif
 
-    struct timespec ts_old;
-    clock_gettime(CLOCK_REALTIME, &ts_old);
-
     byte CEU_DATA[sizeof(CEU_Main)];
 #ifdef CEU_DEBUG
     memset(CEU_DATA, 0, sizeof(CEU_Main));
@@ -127,9 +124,6 @@ int main (int argc, char *argv[])
     {
         struct timespec ts_now;
         clock_gettime(CLOCK_REALTIME, &ts_now);
-        s32 dt = (ts_now.tv_sec  - ts_old.tv_sec)*1000000 +
-                 (ts_now.tv_nsec - ts_old.tv_nsec)/1000;
-        ts_old = ts_now;
 
         if (async_cnt == 0) {
 #ifdef CEU_WCLOCKS
@@ -138,7 +132,6 @@ int main (int argc, char *argv[])
                 ts_now.tv_sec += 100;
 #ifdef CEU_WCLOCKS
             } else {
-                DT -= dt;
                 u64 t = ts_now.tv_sec*1000000LL +  ts_now.tv_nsec%1000LL;
                 t += DT;
                 ts_now.tv_sec  = t / 1000000LL;
@@ -150,7 +143,7 @@ int main (int argc, char *argv[])
         if (mq_timedreceive(queue_read,_buf,sizeof(_buf),NULL,&ts_now) == -1)
         {
 #ifdef CEU_WCLOCKS
-            ceu_sys_go(&app, CEU_IN__WCLOCK, &dt);
+            ceu_sys_go(&app, CEU_IN__WCLOCK, &DT);
 #endif
 #ifdef CEU_ASYNCS
             ceu_sys_go(&app, CEU_IN__ASYNC, NULL);
