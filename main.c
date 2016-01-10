@@ -35,20 +35,37 @@ int END = 0;
 
 typedef struct _Link {
     mqd_t queue;
-    char name[255];
+    char  name[255];
     s16   input;
     struct _Link* nxt;
 } Link;
 
 Link* LINKS[CEU_OUT_n+1];
 
-int ceu_out_event_F (tceu_app* app, int id_out, int len, void* data) {
+int ceu_out_event_F (tceu_app* app, int id_out, int len, char* data) {
     int cnt = 0;
     Link* cur;
     for (cur=LINKS[id_out]; cur; cur=cur->nxt) {
         char _buf[MSGSIZE];
         *((s16*)_buf) = cur->input;
+
         memcpy(_buf+sizeof(s16), data, len);
+
+        // REF_1
+        // vector in the last argument?
+        // copy the plain vector and the payload to the end of "_buf", and 
+        // update "len"
+        {
+            u8 vector_offset = (((u8*)data)[0]);
+            if (vector_offset > 0) {
+                tceu_vector* v = *((tceu_vector**)(data + vector_offset));
+                memcpy(_buf+sizeof(s16)+len, v, sizeof(tceu_vector));
+                len += sizeof(tceu_vector);
+                memcpy(_buf+sizeof(s16)+len, v->mem, v->nxt);
+                len += v->nxt;
+            }
+        }
+
         if (mq_send(cur->queue, _buf, len+sizeof(s16), 0) == 0)
             cnt++;
     }
@@ -140,6 +157,7 @@ int main (int argc, char *argv[])
         else
         {
             char* buf = _buf;
+
             int id_in = *((s16*)buf);
             buf += sizeof(s16);
 
@@ -208,11 +226,20 @@ int main (int argc, char *argv[])
 #endif
                     break;
                 }
-                default:
+                default: {
 #ifdef CEU_EXTS
+                    // REF_1
+                    u8 vector_offset = *((u8*)buf);
+                    if (vector_offset > 0) {
+                        tceu_vector** v = (tceu_vector**)(buf + vector_offset);
+                        *v = (tceu_vector*)(buf + vector_offset + sizeof(tceu_vector*));
+                        (*v)->mem = (char*)(buf + vector_offset + sizeof(tceu_vector*) + sizeof(tceu_vector));
+                    }
+
                     ceu_sys_go(&app, id_in, buf);
 #endif
                     break;
+                }
             }
 
         }
