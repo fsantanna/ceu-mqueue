@@ -83,6 +83,7 @@ native do /******/
     f:close()
     DBG('===> Compiling '..app._ceu..' (NO DFA!)...')
     assert(os.execute('ceu '..app._ceu
+                        .. ' --tuple-vector'
                         --.. ' --dfa'
                         --.. ' --m4-args "'..M4..'"'
                         --.. ' --defs-file _ceu_defs.h'
